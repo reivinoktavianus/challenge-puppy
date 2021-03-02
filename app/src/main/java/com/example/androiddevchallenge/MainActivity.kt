@@ -21,6 +21,7 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -44,12 +45,25 @@ import com.example.androiddevchallenge.model.Pet
 import com.example.androiddevchallenge.model.PetType
 import com.example.androiddevchallenge.ui.theme.*
 
+val dogList = listOf(
+    Pet("Mini", PetType.DOG, R.drawable.teacup_pomeranian),
+    Pet("Bono", PetType.DOG, R.drawable.golden),
+    Pet("Pei", PetType.DOG, R.drawable.pei))
+val catList = listOf(
+    Pet("Yasu", PetType.CAT, R.drawable.yasumi),
+    Pet("Tabby", PetType.CAT, R.drawable.tabby),
+    Pet("Olif", PetType.CAT, R.drawable.olif))
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyTheme {
-                MyApp()
+                MyApp { petName, imageRes ->
+                    PetDetailActivity.createIntent(this, petName, imageRes, 1).let {
+                        startActivity(it)
+                    }
+                }
             }
         }
     }
@@ -57,32 +71,24 @@ class MainActivity : AppCompatActivity() {
 
 // Start building your app here!
 @Composable
-fun MyApp() {
+fun MyApp(onCardClicked: (String, Int) -> Unit) {
     Surface(color = MaterialTheme.colors.background) {
         Column {
-            val dogList = listOf(
-                Pet("Mini", PetType.DOG, R.drawable.teacup_pomeranian),
-                Pet("Bono", PetType.DOG, R.drawable.golden),
-                Pet("Pei", PetType.DOG, R.drawable.pei))
-            PetSection("Woof", dogList)
-            val catList = listOf(
-                Pet("Yasu", PetType.CAT, R.drawable.yasumi),
-                Pet("Tabby", PetType.CAT, R.drawable.tabby),
-                Pet("Olif", PetType.CAT, R.drawable.olif))
-            PetSection("Meow", catList)
+            PetSection("Woof", dogList, onCardClicked)
+            PetSection("Meow", catList, onCardClicked)
         }
     }
 }
 
 @Composable
-fun PetSection(title: String, petList: List<Pet>) {
+fun PetSection(title: String, petList: List<Pet>, onCardClicked: (String, Int) -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         SectionTitle(title = title)
         LazyRow {
             items(petList) {
-                PetCard(it.name, it.imageRes)
+                PetCard(it.name, it.imageRes, onCardClicked)
             }
         }
     }
@@ -100,8 +106,12 @@ fun SectionTitle(title: String) {
 }
 
 @Composable
-fun PetCard(name: String, @DrawableRes imageRes: Int) {
-    Card(shape = shapes.medium) {
+fun PetCard(name: String, @DrawableRes imageRes: Int, onCardClicked: (String, Int) -> Unit) {
+    Card(
+        shape = shapes.medium,
+        modifier = Modifier.clickable {
+            onCardClicked(name, imageRes)
+        }) {
         Column(modifier = Modifier.padding(16.dp).background(teal200), horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 painter = painterResource(id = imageRes),
@@ -120,7 +130,9 @@ fun PetCard(name: String, @DrawableRes imageRes: Int) {
 @Composable
 fun LightPreview() {
     MyTheme {
-        MyApp()
+        MyApp { _,_ ->
+
+        }
     }
 }
 
@@ -128,6 +140,8 @@ fun LightPreview() {
 @Composable
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
-        MyApp()
+        MyApp { _,_ ->
+
+        }
     }
 }
